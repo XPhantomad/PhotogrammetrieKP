@@ -1,0 +1,10 @@
+#Images
+
+./images/
+./rasterized_dod/
+./Unupervised-Image-Clustering-master
+
+#Arrays
+*.npy
+*.tif*
+*.vrt
