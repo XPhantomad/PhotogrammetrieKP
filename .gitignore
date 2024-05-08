@@ -1,5 +1,4 @@
 #Images
-
 ./images/
 ./rasterized_dod/
 ./Unupervised-Image-Clustering-master
@@ -8,3 +7,5 @@
 *.npy
 *.tif*
 *.vrt
+*.pkl
+*.mp4

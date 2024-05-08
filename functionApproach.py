@@ -20,7 +20,7 @@ np.set_printoptions(threshold=np. inf)
 
 '''SETTINGS'''
 #set wd
-wd = r'C:\Users\adria\Documents\PhotogKP'
+wd = os.getcwd()
 # set filter to test
 # other
 plotprint = True # Print filtered pngs (required for video output!)
@@ -38,8 +38,8 @@ stats = True
     
 
 myVRT = os.path.join(wd, 'myVRT.tif')
-pathToImgFiles = sorted(glob.glob(os.path.join(wd, 'm3c2', '*RASTER_Z_AND_SF_b4.tif')))
-pathToImageStack = os.path.join(wd, '4dfilt.npy')
+#pathToImgFiles = sorted(glob.glob(os.path.join(wd, 'm3c2', '*RASTER_Z_AND_SF_b4.tif')))
+#pathToImageStack = os.path.join(wd, '4dfilt.npy')
 
 
 # load image stack # npy array. use VRT to get image dimensions
@@ -61,8 +61,15 @@ def get_graph_of_pixel(x,y, time):
     plt.plot(graph[:,0],graph[:,1])
     plt.show()
     return
+                    #364-x, y, time
+get_graph_of_pixel(260,138, 900)
 
-get_graph_of_pixel(200,100, 300)
+
+# Punkt 7377: starker Abtrag  111,138-->250,138    
+    #--> umliegende Untersuchen 
+# Punkt 16809: unverändert    200, 250 --> 164,250
+# Punkt 38148: Rauschen       260, 310 --> 100, 310
+
 
 
 #Close raster
