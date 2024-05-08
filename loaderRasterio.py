@@ -11,6 +11,7 @@ import datetime
 import rasterio
 import rasterio
 from mpl_toolkits.mplot3d import Axes3D
+from sklearn.cluster import KMeans
 
 
 # global settings
@@ -141,7 +142,11 @@ if plotprint:
         plt.scatter(overall_points[:,0], overall_points[:,1], s=0.1)
         plt.show()
 
+        kameans_data=np.column_stack((overall_points[:,0], overall_points[:,1]))
 
+        kmeans = KMeans(n_clusters=4).fit(kameans_data)
+        plt.scatter(overall_points[:,0], overall_points[:,1], c=kmeans.labels_, s=0.1)
+        plt.show()
 
 
 

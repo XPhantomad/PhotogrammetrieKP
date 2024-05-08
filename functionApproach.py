@@ -62,7 +62,7 @@ def get_graph_of_pixel(x,y, time):
     plt.show()
     return
 
-get_graph_of_pixel(200,200, 900)
+get_graph_of_pixel(200,100, 300)
 
 
 #Close raster
