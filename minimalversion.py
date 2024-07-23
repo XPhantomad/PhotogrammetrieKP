@@ -8,6 +8,8 @@ import matplotlib.dates as mdates
 from datetime import datetime, timedelta
 from sklearn.cluster import KMeans
 from scipy.spatial import KDTree
+import statistics
+
 
 image_width = 370
 image_height = 459
@@ -144,6 +146,7 @@ def get_idxs_from_koords(x1,y1,x2,y2):
 
 
 overall_changepoints = 0
+events = []
 
 height_threshhold = -0.04
 occurence_threshold = 0.2          # Prozent der Pixel unter dem Schwellwert, damit Event erkannt wird
@@ -182,49 +185,69 @@ for i in range(0,image_width-window_width,window_width):
             if(number_values_below_old == -1):
                 number_values_below_old = number_values_below
            
+
+            ## Findet Sprung --> filtert zu kurze heraus (falls gefiltert, kann neuer gefunden werden)
+
             # register change point (UP)
             # zusätzlich prüfen, ob vorheriger Wert wesentlich kleiner war; 
             # nur großer Abtrag wird registriert
+            # --> registriert plötzliche Ereignisse
             if((number_values_below/len(image))>=occurence_threshold and (number_values_below-number_values_below_old)/len(image)>=occurence_threshold/2):
-                changepoints.append(imageindex)
+                changepoints.append([imageindex, number_values_below-number_values_below_old])
                 up = True            
 
             # register change point (DOWN)
             # --> filter out to short events 
             # ohne 564 changepoint Events
-            # if((number_values_below_old-number_values_below)/len(image)>=occurence_threshold/2 and up==True):
-            #     if(imageindex - changepoints[-1] <= event_length_threshold):
-            #         changepoints.pop()
-            #     up = False
+            if((number_values_below_old-number_values_below)/len(image)>=occurence_threshold/2 and up==True):
+                if(imageindex - changepoints[-1][0] <= event_length_threshold):
+                    changepoints.pop()
+                up = False
 
             # filtern, wenn Anzahl wieder unter 0,1 geht
             if((number_values_below/len(image))<=occurence_threshold/2 and up==True):
-                if(imageindex - changepoints[-1] <= event_length_threshold):
+                if(imageindex - changepoints[-1][0] <= event_length_threshold):
                     changepoints.pop()
                 up = False
 
             number_values_below_old = number_values_below
 
-            # was danach???? 
-
-            
+        if(len(changepoints) == 1):
+                # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
+                score = changepoints[0][1] * statistics.mean(number_values_below_list[changepoints[0][0]:])  
+                events.append([score, i,j, timestamps[changepoints[0][0]]])
+        else: 
+            pass
+            # TODO: Timeslices
         if(changepoints):
 
             # Klassifizierung 
             print(len(changepoints))      ## wenig changepoints im verhältnis zur Zeit: --> gutes Event
             overall_changepoints += len(changepoints)
+            
             # Ausgabe Bereich und Zeitpunkt des ersten
-            print(timestamps[changepoints[0]])      ## mehrer hintereinander mit gleichem Datum des ersten changepoint
+            print(timestamps[changepoints[0][0]])      ## mehrer hintereinander mit gleichem Datum des ersten changepoint
 
 
-            ## TODO: Punktesystem für Events
+            ## Punktesystem für Events
+            # erstmal nur primäre Changepoints
+            if(len(changepoints) == 1):
+                # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
+                score = changepoints[0][1] * statistics.mean(number_values_below_list[changepoints[0][0]:])  
+                events.append([score, i,j, timestamps[changepoints[0][0]]])
 
             print(i,j)
-            # TODO: Tabbellarische Ausgabe
-            if(len(changepoints) == 1):
-                plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
+            # durchschnitt der werte nach dem ersten Changepoint
+            print(statistics.mean(number_values_below_list[changepoints[0][0]:]))    	    ## ab 0,26 signifikant
+            # TODO: Tabellarische Ausgabe
+            #plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
+
 
 print(overall_changepoints)
+events = np.array(events)
+sorted_events = events[events[:,0].argsort()]
+print(sorted_events[:,])
+
 
 
 #### Ausgabe: Gravierendste Ereignisse --> weniger gravierenden Ereignissen
