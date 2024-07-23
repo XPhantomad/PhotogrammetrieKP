@@ -216,31 +216,33 @@ for i in range(0,image_width-window_width,window_width):
                 # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
                 score = changepoints[0][1] * statistics.mean(number_values_below_list[changepoints[0][0]:])  
                 events.append([score, i,j, timestamps[changepoints[0][0]]])
-        else: 
+        elif (changepoints): 
             pass
-            # TODO: Timeslices
-        if(changepoints):
+            # split at changepoints and score regions seperatly:
+            for k in range(len(changepoints)-2):
+                 # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
+                score = changepoints[k][1] * statistics.mean(number_values_below_list[changepoints[k][0]:changepoints[k+1][0]])
+                events.append([score, i,j, timestamps[changepoints[k][0]]])
+        
+        overall_changepoints += len(changepoints)
+        # if(changepoints):
 
-            # Klassifizierung 
-            print(len(changepoints))      ## wenig changepoints im verhältnis zur Zeit: --> gutes Event
-            overall_changepoints += len(changepoints)
-            
-            # Ausgabe Bereich und Zeitpunkt des ersten
-            print(timestamps[changepoints[0][0]])      ## mehrer hintereinander mit gleichem Datum des ersten changepoint
+        #     # Klassifizierung 
+        #     print(len(changepoints))      ## wenig changepoints im verhältnis zur Zeit: --> gutes Event            
+        #     # Ausgabe Bereich und Zeitpunkt des ersten
+        #     print(timestamps[changepoints[0][0]])      ## mehrer hintereinander mit gleichem Datum des ersten changepoint
+        #     ## Punktesystem für Events
+        #     # erstmal nur primäre Changepoints
+        #     if(len(changepoints) == 1):
+        #         # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
+        #         score = changepoints[0][1] * statistics.mean(number_values_below_list[changepoints[0][0]:])  
+        #         events.append([score, i,j, timestamps[changepoints[0][0]]])
 
-
-            ## Punktesystem für Events
-            # erstmal nur primäre Changepoints
-            if(len(changepoints) == 1):
-                # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
-                score = changepoints[0][1] * statistics.mean(number_values_below_list[changepoints[0][0]:])  
-                events.append([score, i,j, timestamps[changepoints[0][0]]])
-
-            print(i,j)
-            # durchschnitt der werte nach dem ersten Changepoint
-            print(statistics.mean(number_values_below_list[changepoints[0][0]:]))    	    ## ab 0,26 signifikant
-            # TODO: Tabellarische Ausgabe
-            #plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
+        #     print(i,j)
+        #     # durchschnitt der werte nach dem ersten Changepoint
+        #     print(statistics.mean(number_values_below_list[changepoints[0][0]:]))    	    ## ab 0,26 signifikant
+        #     # TODO: Tabellarische Ausgabe
+        #     #plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
 
 
 print(overall_changepoints)
