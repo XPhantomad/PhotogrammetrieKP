@@ -145,12 +145,21 @@ def get_idxs_from_koords(x1,y1,x2,y2):
     return cp_sel_idxs
 
 
+def calc_weighted_mean_difference(number_values_below_list, start, changepoint, end):
+    mean_before_cp = statistics.mean(number_values_below_list[start:changepoint])
+    mean_after_cp = statistics.mean(number_values_below_list[changepoint:end])
+    mean_difference = mean_after_cp-mean_before_cp
+    if(mean_difference <= 0):
+        return 0
+    return mean_after_cp/mean_difference
+
+
 overall_changepoints = 0
 events = []
 
 height_threshhold = -0.04
 occurence_threshold = 0.2          # Prozent der Pixel unter dem Schwellwert, damit Event erkannt wird
-mean_threshold = 0.17              # difference threshold of the means before and after the changepoints
+mean_threshold = 2.5             # difference threshold of the means before and after the changepoints
 event_length_threshold = 20        # Anzahl an Bilder, die das Event mindestens lang sein muss --> flackern beseitigen (TODO: alle registrieren und danach ordnen)
 
 #TODO: diese Parameter iterativ durchgehen
@@ -192,23 +201,26 @@ for i in range(0,image_width-window_width,window_width):
             # zusätzlich prüfen, ob vorheriger Wert wesentlich kleiner war; 
             # nur großer Abtrag wird registriert
             # --> registriert plötzliche Ereignisse
+            
             if((number_values_below/len(image))>=occurence_threshold and (number_values_below-number_values_below_old)/len(image)>=occurence_threshold/2):
                 changepoints.append([imageindex, number_values_below-number_values_below_old])
+                print(timestamps[imageindex])
                 up = True            
 
             # register change point (DOWN)
             # --> filter out to short events 
             # ohne 564 changepoint Events
-            if((number_values_below_old-number_values_below)/len(image)>=occurence_threshold/2 and up==True):
-                if(imageindex - changepoints[-1][0] <= event_length_threshold):
-                    changepoints.pop()
-                up = False
+
+            # if((number_values_below_old-number_values_below)/len(image)>=occurence_threshold/2 and up==True):
+            #     if(imageindex - changepoints[-1][0] <= event_length_threshold):
+            #         changepoints.pop()
+            #     up = False
 
             # filtern, wenn Anzahl wieder unter 0,1 geht
-            if((number_values_below/len(image))<=occurence_threshold/2 and up==True):
-                if(imageindex - changepoints[-1][0] <= event_length_threshold):
-                    changepoints.pop()
-                up = False
+            # if((number_values_below/len(image))<=occurence_threshold/2 and up==True):
+            #     if(imageindex - changepoints[-1][0] <= event_length_threshold):
+            #         changepoints.pop()
+            #     up = False
 
             number_values_below_old = number_values_below
 
@@ -217,35 +229,39 @@ for i in range(0,image_width-window_width,window_width):
         # SCORE # TODO: IDEE: Durchschnitt davor und durchschnitt danach vergleichen
         if(len(changepoints) == 1):
                 # prove Changepoint signifikance by difference of mean of values before and after changepoint
-                print(statistics.mean(number_values_below_list[changepoints[0][0]:])-statistics.mean(number_values_below_list[:changepoints[0][0]]))
-                if(statistics.mean(number_values_below_list[:changepoints[0][0]])-statistics.mean(number_values_below_list[changepoints[0][0]:]) >= mean_threshold):
+                mean_difference = calc_weighted_mean_difference(number_values_below_list, 0, changepoints[0][0], None)
+                print(mean_difference)
+                if(mean_difference >= mean_threshold):
                     # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
-                    score = changepoints[0][1] * statistics.mean(number_values_below_list[changepoints[0][0]:])  
+                    score = changepoints[0][1] * mean_difference  
                     events.append([score, i,j, timestamps[changepoints[0][0]]])
         elif (changepoints): 
             # split at changepoints and score regions seperatly:
-            print(len(changepoints))
+            #print(len(changepoints))
             for k in range(len(changepoints)-1):
-                print(k)
+                
                 print(timestamps[changepoints[k][0]])
                 if(k==0):
-                    mean_difference = statistics.mean(number_values_below_list[changepoints[k][0]:changepoints[k+1][0]])-statistics.mean(number_values_below_list[0:changepoints[k][0]])
+                    mean_difference = calc_weighted_mean_difference(number_values_below_list, 0, changepoints[k][0], changepoints[k+1][0])
                 else :
-                    mean_difference = statistics.mean(number_values_below_list[changepoints[k][0]:changepoints[k+1][0]])-statistics.mean(number_values_below_list[changepoints[k-1][0]:changepoints[k][0]])
+                    mean_difference = calc_weighted_mean_difference(number_values_below_list, changepoints[k-1][0], changepoints[k][0], changepoints[k+1][0])
+                print(mean_difference)
                 # prove Changepoint signifikance by difference of mean of values before and after changepoint
                 if(mean_difference >= mean_threshold):
                     # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
-                    score = changepoints[k][1] * statistics.mean(number_values_below_list[changepoints[k][0]:changepoints[k+1][0]])
+                    score = changepoints[k][1] * mean_difference
                     events.append([score, i,j, timestamps[changepoints[k][0]]])
             
             # last changepoint until end of timeseries
-            if(statistics.mean(number_values_below_list[changepoints[-1][0]:])-statistics.mean(number_values_below_list[changepoints[-2][0]:changepoints[-1][0]])):
-                score = changepoints[-1][1] * statistics.mean(number_values_below_list[changepoints[-2][0]:changepoints[-1][0]])
+            mean_difference = calc_weighted_mean_difference(number_values_below_list, changepoints[-2][0], changepoints[-1][0], None)
+            print(mean_difference)
+            if(mean_difference >= mean_threshold):
+                score = changepoints[-1][1] * mean_difference
                 events.append([score, i,j, timestamps[changepoints[-1][0]]])
 
         overall_changepoints += len(changepoints)
         if(changepoints):
-
+              print(i,j)
         #     # Klassifizierung 
         #     print(len(changepoints))      ## wenig changepoints im verhältnis zur Zeit: --> gutes Event            
         #     # Ausgabe Bereich und Zeitpunkt des ersten
@@ -261,7 +277,7 @@ for i in range(0,image_width-window_width,window_width):
         #     # durchschnitt der werte nach dem ersten Changepoint
         #     print(statistics.mean(number_values_below_list[changepoints[0][0]:]))    	    ## ab 0,26 signifikant
         #     # TODO: Tabellarische Ausgabe
-            plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
+              #plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
 
 
 print(overall_changepoints)
