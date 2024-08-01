@@ -145,7 +145,7 @@ def get_idxs_from_koords(x1,y1,x2,y2):
     return cp_sel_idxs
 
 
-def calc_weighted_mean_difference2(number_values_below_list, start, changepoint, end):
+def calc_weighted_mean_difference(number_values_below_list, start, changepoint, end):
     mean_before_cp = statistics.mean(number_values_below_list[start:changepoint])
     mean_after_cp = statistics.mean(number_values_below_list[changepoint:end])
     mean_difference = mean_after_cp-mean_before_cp
@@ -154,28 +154,19 @@ def calc_weighted_mean_difference2(number_values_below_list, start, changepoint,
     return mean_after_cp/mean_difference
 
 
-# TODO: Rauschen filtern
-def calc_weighted_mean_difference(number_values_below_list, start, changepoint, end):
-    mean_before_cp = statistics.mean(number_values_below_list[0:changepoint])
-    mean_after_cp = statistics.mean(number_values_below_list[changepoint:None])
-    mean_difference = mean_after_cp-mean_before_cp
-    if(mean_difference <= 0):
-        return 0
-    return mean_difference
-
 overall_changepoints = 0
 events = []
 
 height_threshhold = -0.04
 occurence_threshold = 0.2          # Prozent der Pixel unter dem Schwellwert, damit Event erkannt wird
-mean_threshold = 0.1             # difference threshold of the means before and after the changepoints
+mean_threshold = 2.5             # difference threshold of the means before and after the changepoints
 event_length_threshold = 20        # Anzahl an Bilder, die das Event mindestens lang sein muss --> flackern beseitigen (TODO: alle registrieren und danach ordnen)
 
 #TODO: diese Parameter iterativ durchgehen
 window_width = 30
 window_height = 30
 timespan_start = 0      # index of image    
-timespan_end = 909      # index of image max = 909
+timespan_end = 800      # index of image max = 909
 
 # iterate over picture from from left to right
 for i in range(0,image_width-window_width,window_width):
@@ -188,7 +179,6 @@ for i in range(0,image_width-window_width,window_width):
         number_values_below_list = []
         # get the wanted pixels in the wanted timespan
         region_distances =  analysis.smoothed_distances[selected_idx, timespan_start:timespan_end]
-        number_values_below_old = -1
         for imageindex in range(timespan_end-timespan_start):
             # single picture
             image = region_distances[:,imageindex]
@@ -201,8 +191,8 @@ for i in range(0,image_width-window_width,window_width):
             number_values_below_list.append(number_values_below/len(image))
 
             # initialy set old value
-            if(number_values_below_old == -1):
-                number_values_below_old = number_values_below
+            # if(number_values_below_old == -1):
+            #     number_values_below_old = number_values_below
 
             ## Findet Sprung --> filtert zu kurze heraus (falls gefiltert, kann neuer gefunden werden)
             # register change point (UP)
@@ -210,11 +200,11 @@ for i in range(0,image_width-window_width,window_width):
             # nur großer Abtrag wird registriert
             # --> registriert plötzliche Ereignisse
             
-            # TODO: Sprung anders finden
-            if((number_values_below/len(image))>=occurence_threshold and (number_values_below-number_values_below_old)/len(image)>=occurence_threshold/2):
-                changepoints.append([imageindex, number_values_below-number_values_below_old])
-                print(timestamps[imageindex])
-                up = True            
+            # # TODO: Sprung anders finden
+            # if((number_values_below/len(image))>=occurence_threshold and (number_values_below-number_values_below_old)/len(image)>=occurence_threshold/2):
+            #     changepoints.append([imageindex, number_values_below-number_values_below_old])
+            #     print(timestamps[imageindex])
+            #     up = True            
 
             # register change point (DOWN)
             # --> filter out to short events 
@@ -230,8 +220,7 @@ for i in range(0,image_width-window_width,window_width):
             #     if(imageindex - changepoints[-1][0] <= event_length_threshold):
             #         changepoints.pop()
             #     up = False
-
-            number_values_below_old = number_values_below
+        for 
 
         if(len(changepoints) == 1):
                 # prove Changepoint signifikance by difference of mean of values before and after changepoint
@@ -239,7 +228,7 @@ for i in range(0,image_width-window_width,window_width):
                 print(mean_difference)
                 if(mean_difference >= mean_threshold):
                     # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
-                    score =  mean_difference  
+                    score = changepoints[0][1] * mean_difference  
                     events.append([score, i,j, timestamps[changepoints[0][0]]])
         elif (changepoints): 
             # split at changepoints and score regions seperatly:
@@ -255,14 +244,14 @@ for i in range(0,image_width-window_width,window_width):
                 # prove Changepoint signifikance by difference of mean of values before and after changepoint
                 if(mean_difference >= mean_threshold):
                     # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
-                    score =  mean_difference
+                    score = changepoints[k][1] * mean_difference
                     events.append([score, i,j, timestamps[changepoints[k][0]]])
             
             # last changepoint until end of timeseries
             mean_difference = calc_weighted_mean_difference(number_values_below_list, changepoints[-2][0], changepoints[-1][0], None)
             print(mean_difference)
             if(mean_difference >= mean_threshold):
-                score = mean_difference #changepoints[-1][1] * 
+                score = changepoints[-1][1] * mean_difference
                 events.append([score, i,j, timestamps[changepoints[-1][0]]])
 
         overall_changepoints += len(changepoints)
@@ -283,7 +272,7 @@ for i in range(0,image_width-window_width,window_width):
         #     # durchschnitt der werte nach dem ersten Changepoint
         #     print(statistics.mean(number_values_below_list[changepoints[0][0]:]))    	    ## ab 0,26 signifikant
         #     # TODO: Tabellarische Ausgabe
-              # plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
+              plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
 
 
 print(overall_changepoints)
