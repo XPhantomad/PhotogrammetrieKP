@@ -155,6 +155,7 @@ def calc_weighted_mean_difference2(number_values_below_list, start, changepoint,
 
 
 # TODO: Rauschen filtern
+# unweighted
 def calc_weighted_mean_difference(number_values_below_list, start, changepoint, end):
     mean_before_cp = statistics.mean(number_values_below_list[0:changepoint])
     mean_after_cp = statistics.mean(number_values_below_list[changepoint:None])
@@ -175,12 +176,12 @@ event_length_threshold = 20        # Anzahl an Bilder, die das Event mindestens 
 window_width = 30
 window_height = 30
 timespan_start = 0      # index of image    
-timespan_end = 909      # index of image max = 909
+timespan_end = 800      # index of image max = 909
 
 # iterate over picture from from left to right
 for i in range(0,image_width-window_width,window_width):
     # iterate over picture from bottom to top
-    for j in range(120,image_height-window_height,window_height):
+    for j in range(150,image_height-window_height,window_height):
         #TODO: Iterate over timeslices (FRAGE: Wie klein)
         selected_idx = get_idxs_from_koords(i,j, i+window_width,j+window_height)
         up = False
