@@ -104,32 +104,14 @@ def plot_time_series(timestamps, time_series):
 
     plt.show()
 
-def plot_image_result(region_start, region_width, region_height, timestamp_index):
-    fig, ax = plt.subplots(1,1, figsize=(5,5))
-    # get the change magnitude of the last epoch
-    change_vals = analysis.smoothed_distances[:, timestamp_index]
-    cloud = analysis.corepoints.cloud
-    # plot coordinates colored by change values 
-    d = ax.scatter(cloud[:,0], cloud[:,1], c = change_vals, cmap='seismic_r', vmin=-1.0, vmax=1.0, s=1)
-    ax.set_aspect('equal')
-    plt.colorbar(d, format=('%.2f'), label='Change value [m]', ax=ax)
+def plot_temporal_result(timestamps, time_series):
 
-    # add plot elements
-    ax.set_xlabel('X [m]')
-    ax.set_ylabel('Y [m]')
-
-    shape = Rectangle(region_start,
-                   width=region_width,
-                   height=region_height,
-                   angle=0, fill=False,
-                   edgecolor="green") # TODO: Signifikanz durch Farbe repräsentieren
-    ax.add_patch(shape)
-
-    #print(cloud[:,0]) # gibt erste Spalte zurück!!--------------------
+    plt.bar(timestamps, time_series, color ='maroon', 
+        width = 0.2)
     plt.show()
 
 
-def plot_image_results(region_starts, region_width, region_height, timestamp_index):
+def plot_image_results(events, region_width, region_height, timestamp_index):
     fig, ax = plt.subplots(1,1, figsize=(5,5))
     # get the change magnitude of the last epoch
     change_vals = analysis.smoothed_distances[:, timestamp_index]
@@ -142,16 +124,13 @@ def plot_image_results(region_starts, region_width, region_height, timestamp_ind
     # add plot elements
     ax.set_xlabel('X [m]')
     ax.set_ylabel('Y [m]')
-    for region_start in region_starts:
-        shape = Rectangle(region_start,
+    for event in events:
+        shape = Rectangle(event[1:3],
                     width=region_width,
                     height=region_height,
-                    angle=0, fill=False,
-                    edgecolor="green") # TODO: Signifikanz durch Farbe repräsentieren
+                    angle=0,
+                    color=(0,0.8,0,event[0]))
         ax.add_patch(shape)
-
-    #print(cloud[:,0]) # gibt erste Spalte zurück!!--------------------
-
     plt.show()
 
 
@@ -205,7 +184,6 @@ events = []
 height_threshhold = -0.04
 occurence_threshold = 0.2          # Prozent der Pixel unter dem Schwellwert, damit Event erkannt wird
 mean_threshold = 0.1             # difference threshold of the means before and after the changepoints
-#event_length_threshold = 20        # Anzahl an Bilder, die das Event mindestens lang sein muss --> flackern beseitigen (TODO: alle registrieren und danach ordnen)
 
 #TODO: diese Parameter iterativ durchgehen
 window_width = 20
@@ -250,26 +228,19 @@ for i in range(0,image_width-window_width,window_width):
         if(len(changepoints) == 1):
                 # prove Changepoint signifikance by difference of mean of values before and after changepoint
                 mean_difference = calc_weighted_mean_difference(number_values_below_list, 0, changepoints[0][0], None)
-                #print(mean_difference)
                 if(mean_difference >= mean_threshold):
-                    # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
                     score =  mean_difference  
                     events.append([score, i,j, timestamps[changepoints[0][0]]])
         elif (changepoints): 
             # split at changepoints and score regions seperatly:
-            #print(len(changepoints))
             for k in range(len(changepoints)-1):
-                
-                #print(timestamps[changepoints[k][0]])
                 if(k==0):
                     mean_difference = calc_weighted_mean_difference(number_values_below_list, 0, changepoints[k][0], changepoints[k+1][0])
                 else :
                     mean_difference = calc_weighted_mean_difference(number_values_below_list, changepoints[k-1][0], changepoints[k][0], changepoints[k+1][0])
-                #print(mean_difference)
                 # prove Changepoint signifikance by difference of mean of values before and after changepoint
                 if(mean_difference >= mean_threshold):
-                    # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
-                    score =  mean_difference
+                    score = mean_difference
                     events.append([score, i,j, timestamps[changepoints[k][0]]])
             
             # last changepoint until end of timeseries
@@ -278,46 +249,26 @@ for i in range(0,image_width-window_width,window_width):
             if(mean_difference >= mean_threshold):
                 score = mean_difference #changepoints[-1][1] * 
                 events.append([score, i,j, timestamps[changepoints[-1][0]]])
-
         overall_changepoints += len(changepoints)
-        if(changepoints):
-              print(i,j)
-        #     # Klassifizierung 
-        #     print(len(changepoints))      ## wenig changepoints im verhältnis zur Zeit: --> gutes Event            
-        #     # Ausgabe Bereich und Zeitpunkt des ersten
-        #     print(timestamps[changepoints[0][0]])      ## mehrer hintereinander mit gleichem Datum des ersten changepoint
-        #     ## Punktesystem für Events
-        #     # erstmal nur primäre Changepoints
-        #     if(len(changepoints) == 1):
-        #         # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
-        #         score = changepoints[0][1] * statistics.mean(number_values_below_list[changepoints[0][0]:])  
-        #         events.append([score, i,j, timestamps[changepoints[0][0]]])
-
-        #     print(i,j)
-        #     # durchschnitt der werte nach dem ersten Changepoint
-        #     print(statistics.mean(number_values_below_list[changepoints[0][0]:]))    	    ## ab 0,26 signifikant
-        #     # TODO: Tabellarische Ausgabe
-              # plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
-
 
 print(overall_changepoints)
 events = np.array(events)
 if(events.any()):
     sorted_events = events[events[:,0].argsort()]
     print(sorted_events[:,])
-    print(len(sorted_events))  
+    print(len(sorted_events))
+
     # plot spatial results
-    plot_image_results(events[:,1:3], window_width, window_height, timestamps.index(events[1,3]))
+    plot_image_results(events, window_width, window_height, timespan_end)
+    
     # plot temporal results
     timeseries = np.zeros(timespan_end-timespan_start)
     for event in events:
         # sum up scores for timestamps
         timeseries[timestamps.index(event[3])] = timeseries[timestamps.index(event[3])] + event[0]
     plot_time_series(timestamps[timespan_start:timespan_end], timeseries)
+    plot_temporal_result(timestamps[timespan_start:timespan_end],timeseries)
 
-
-#### Ausgabe: Gravierendste Ereignisse --> weniger gravierenden Ereignissen
-# --> Ereignis endet nicht
 
 
 
