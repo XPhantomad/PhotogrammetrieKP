@@ -104,7 +104,7 @@ def plot_time_series(timestamps, time_series):
 
     plt.show()
 
-def plot_image_results(region_start, region_width, region_height, timestamp_index):
+def plot_image_result(region_start, region_width, region_height, timestamp_index):
     fig, ax = plt.subplots(1,1, figsize=(5,5))
     # get the change magnitude of the last epoch
     change_vals = analysis.smoothed_distances[:, timestamp_index]
@@ -122,11 +122,35 @@ def plot_image_results(region_start, region_width, region_height, timestamp_inde
                    width=region_width,
                    height=region_height,
                    angle=0, fill=False,
-                   edgecolor="green")
+                   edgecolor="green") # TODO: Signifikanz durch Farbe repräsentieren
     ax.add_patch(shape)
 
     #print(cloud[:,0]) # gibt erste Spalte zurück!!--------------------
+    plt.show()
 
+
+def plot_image_results(region_starts, region_width, region_height, timestamp_index):
+    fig, ax = plt.subplots(1,1, figsize=(5,5))
+    # get the change magnitude of the last epoch
+    change_vals = analysis.smoothed_distances[:, timestamp_index]
+    cloud = analysis.corepoints.cloud
+    # plot coordinates colored by change values 
+    d = ax.scatter(cloud[:,0], cloud[:,1], c = change_vals, cmap='seismic_r', vmin=-1.0, vmax=1.0, s=1)
+    ax.set_aspect('equal')
+    plt.colorbar(d, format=('%.2f'), label='Change value [m]', ax=ax)
+
+    # add plot elements
+    ax.set_xlabel('X [m]')
+    ax.set_ylabel('Y [m]')
+    for region_start in region_starts:
+        shape = Rectangle(region_start,
+                    width=region_width,
+                    height=region_height,
+                    angle=0, fill=False,
+                    edgecolor="green") # TODO: Signifikanz durch Farbe repräsentieren
+        ax.add_patch(shape)
+
+    #print(cloud[:,0]) # gibt erste Spalte zurück!!--------------------
 
     plt.show()
 
@@ -181,11 +205,11 @@ events = []
 height_threshhold = -0.04
 occurence_threshold = 0.2          # Prozent der Pixel unter dem Schwellwert, damit Event erkannt wird
 mean_threshold = 0.1             # difference threshold of the means before and after the changepoints
-event_length_threshold = 20        # Anzahl an Bilder, die das Event mindestens lang sein muss --> flackern beseitigen (TODO: alle registrieren und danach ordnen)
+#event_length_threshold = 20        # Anzahl an Bilder, die das Event mindestens lang sein muss --> flackern beseitigen (TODO: alle registrieren und danach ordnen)
 
 #TODO: diese Parameter iterativ durchgehen
-window_width = 30
-window_height = 30
+window_width = 20
+window_height = 20
 timespan_start = 0      # index of image    
 timespan_end = 800      # index of image max = 909
 
@@ -193,7 +217,6 @@ timespan_end = 800      # index of image max = 909
 for i in range(0,image_width-window_width,window_width):
     # iterate over picture from bottom to top
     for j in range(150,image_height-window_height,window_height):
-        #TODO: Iterate over timeslices (FRAGE: Wie klein)
         selected_idx = get_idxs_from_koords(i,j, i+window_width,j+window_height)
         up = False
         changepoints = []
@@ -216,39 +239,18 @@ for i in range(0,image_width-window_width,window_width):
             if(number_values_below_old == -1):
                 number_values_below_old = number_values_below
 
-            ## Findet Sprung --> filtert zu kurze heraus (falls gefiltert, kann neuer gefunden werden)
-            # register change point (UP)
-            # zusätzlich prüfen, ob vorheriger Wert wesentlich kleiner war; 
-            # nur großer Abtrag wird registriert
             # --> registriert plötzliche Ereignisse
-            
-            # TODO: Sprung anders finden
             if((number_values_below/len(image))>=occurence_threshold and (number_values_below-number_values_below_old)/len(image)>=occurence_threshold/2):
                 changepoints.append([imageindex, number_values_below-number_values_below_old])
-                print(timestamps[imageindex])
+                #print(timestamps[imageindex])
                 up = True            
-
-            # register change point (DOWN)
-            # --> filter out to short events 
-            # ohne 564 changepoint Events
-
-            # if((number_values_below_old-number_values_below)/len(image)>=occurence_threshold/2 and up==True):
-            #     if(imageindex - changepoints[-1][0] <= event_length_threshold):
-            #         changepoints.pop()
-            #     up = False
-
-            # filtern, wenn Anzahl wieder unter 0,1 geht
-            # if((number_values_below/len(image))<=occurence_threshold/2 and up==True):
-            #     if(imageindex - changepoints[-1][0] <= event_length_threshold):
-            #         changepoints.pop()
-            #     up = False
 
             number_values_below_old = number_values_below
 
         if(len(changepoints) == 1):
                 # prove Changepoint signifikance by difference of mean of values before and after changepoint
                 mean_difference = calc_weighted_mean_difference(number_values_below_list, 0, changepoints[0][0], None)
-                print(mean_difference)
+                #print(mean_difference)
                 if(mean_difference >= mean_threshold):
                     # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
                     score =  mean_difference  
@@ -258,12 +260,12 @@ for i in range(0,image_width-window_width,window_width):
             #print(len(changepoints))
             for k in range(len(changepoints)-1):
                 
-                print(timestamps[changepoints[k][0]])
+                #print(timestamps[changepoints[k][0]])
                 if(k==0):
                     mean_difference = calc_weighted_mean_difference(number_values_below_list, 0, changepoints[k][0], changepoints[k+1][0])
                 else :
                     mean_difference = calc_weighted_mean_difference(number_values_below_list, changepoints[k-1][0], changepoints[k][0], changepoints[k+1][0])
-                print(mean_difference)
+                #print(mean_difference)
                 # prove Changepoint signifikance by difference of mean of values before and after changepoint
                 if(mean_difference >= mean_threshold):
                     # score ist Höhe des Sprunges * durchschnitt der werte nach dem ersten Changepoint
@@ -272,7 +274,7 @@ for i in range(0,image_width-window_width,window_width):
             
             # last changepoint until end of timeseries
             mean_difference = calc_weighted_mean_difference(number_values_below_list, changepoints[-2][0], changepoints[-1][0], None)
-            print(mean_difference)
+            #print(mean_difference)
             if(mean_difference >= mean_threshold):
                 score = mean_difference #changepoints[-1][1] * 
                 events.append([score, i,j, timestamps[changepoints[-1][0]]])
@@ -300,19 +302,18 @@ for i in range(0,image_width-window_width,window_width):
 
 print(overall_changepoints)
 events = np.array(events)
-sorted_events = events[events[:,0].argsort()]
-print(sorted_events[:,])
-print(len(sorted_events))
-
-x = range(image_width)
-y = range(image_height,0,-1)
-X, Y = np.meshgrid(x, y)
-z=np.zeros(image_width*image_height)
-cloud=np.column_stack((X.flatten(),Y.flatten(),z.flatten()))
-
-for event in sorted_events:
-    plot_image_results((event[1],event[2]), window_width, window_height, timestamps.index(event[3]))
-
+if(events.any()):
+    sorted_events = events[events[:,0].argsort()]
+    print(sorted_events[:,])
+    print(len(sorted_events))  
+    # plot spatial results
+    plot_image_results(events[:,1:3], window_width, window_height, timestamps.index(events[1,3]))
+    # plot temporal results
+    timeseries = np.zeros(timespan_end-timespan_start)
+    for event in events:
+        # sum up scores for timestamps
+        timeseries[timestamps.index(event[3])] = timeseries[timestamps.index(event[3])] + event[0]
+    plot_time_series(timestamps[timespan_start:timespan_end], timeseries)
 
 
 #### Ausgabe: Gravierendste Ereignisse --> weniger gravierenden Ereignissen
