@@ -30,7 +30,6 @@ def build_analysis():
     X, Y = np.meshgrid(x, y)
     z=np.zeros(image_width*image_height)
     cloud=np.column_stack((X.flatten(),Y.flatten(),z.flatten()))
-    #print(cloud)
 
     analysis.corepoints = cloud
 
@@ -68,22 +67,6 @@ analysis = py4dgeo.SpatiotemporalAnalysis(f'{data_path}/riverbank.zip')
 
 # load the smoothed distances
 distances = analysis.smoothed_distances
-
-#Bereich: (250,150 bis 285,180)
-
-locs_of_interest = np.array([[250,150, 1.78810005e+01],
-       [285, 150, 1.85109997e+01],
-       [250, 151, 1.85109997e+01],
-       [250, 151, 1.85109997e+01],
-       [250,152, 1.78810005e+01],
-       [285,180, 1.78810005e+01]])
-
-# WErte der Matrix: 370x460
-        #y
-#114580  150
-#114210  151
-#113840  152
-
 
 def plot_time_series(timestamps, time_series):
     # plot the time series
@@ -140,7 +123,6 @@ def get_idxs_from_koords(x1,y1,x2,y2):
     Eingabe: 2 (x,y) Koordinaten
     Ausgabe: Array mit gewählten Indexes 
     """
-
     # create Array with interested x,y and z as zero
     x = range(x1,x2)
     y = range(y2,y1,-1)
@@ -152,23 +134,8 @@ def get_idxs_from_koords(x1,y1,x2,y2):
     corepoints_cloud = analysis.corepoints.cloud
     tree = KDTree(np.c_[corepoints_cloud[:,0].ravel(), corepoints_cloud[:,1].ravel()])
     dd, cp_sel_idxs = tree.query(region[:,:2], k=1)
-    #print(cp_sel_idxs)
-
-    #plot_image(region, cp_sel_idxs)
-
     return cp_sel_idxs
 
-
-def calc_weighted_mean_difference2(number_values_below_list, start, changepoint, end):
-    mean_before_cp = statistics.mean(number_values_below_list[start:changepoint])
-    mean_after_cp = statistics.mean(number_values_below_list[changepoint:end])
-    mean_difference = mean_after_cp-mean_before_cp
-    if(mean_difference <= 0):
-        return 0
-    return mean_after_cp/mean_difference
-
-
-# TODO: Rauschen filtern
 # unweighted
 def calc_weighted_mean_difference(number_values_below_list, start, changepoint, end):
     mean_before_cp = statistics.mean(number_values_below_list[0:changepoint])
@@ -181,22 +148,29 @@ def calc_weighted_mean_difference(number_values_below_list, start, changepoint, 
 overall_changepoints = 0
 events = []
 
+# Changepoint detection parameter
 height_threshhold = -0.04
 occurence_threshold = 0.2          # Prozent der Pixel unter dem Schwellwert, damit Event erkannt wird
 mean_threshold = 0.1             # difference threshold of the means before and after the changepoints
 
-#TODO: diese Parameter iterativ durchgehen
-window_width = 20
-window_height = 20
-timespan_start = 0      # index of image    
-timespan_end = 800      # index of image max = 909
+# Request User Input
+timespan_start = int(input("Enter timespan start (Index):"))
+timespan_end = int(input("Enter timespan end (Index):"))
+if(timespan_start < 0 or timespan_start > 909 or timespan_end <0 or timespan_end>909 or timespan_end<timespan_start):
+    print("invalid timespan")
+    quit()
+window_width = int(input("Enter window size:"))
+window_height = window_width
+if(window_height < 0 or window_height >300):
+    print("invalid window size")
+    quit()
+
 
 # iterate over picture from from left to right
 for i in range(0,image_width-window_width,window_width):
     # iterate over picture from bottom to top
     for j in range(150,image_height-window_height,window_height):
         selected_idx = get_idxs_from_koords(i,j, i+window_width,j+window_height)
-        up = False
         changepoints = []
         number_values_below_list = []
         # get the wanted pixels in the wanted timespan
@@ -211,20 +185,20 @@ for i in range(0,image_width-window_width,window_width):
             for pixel in image:
                 if(pixel<=height_threshhold):
                     number_values_below+=1
+
             number_values_below_list.append(number_values_below/len(image))
 
             # initialy set old value
             if(number_values_below_old == -1):
                 number_values_below_old = number_values_below
 
-            # --> registriert plötzliche Ereignisse
+            # register changepoints
             if((number_values_below/len(image))>=occurence_threshold and (number_values_below-number_values_below_old)/len(image)>=occurence_threshold/2):
                 changepoints.append([imageindex, number_values_below-number_values_below_old])
-                #print(timestamps[imageindex])
-                up = True            
 
             number_values_below_old = number_values_below
 
+        # filter and score changepoints
         if(len(changepoints) == 1):
                 # prove Changepoint signifikance by difference of mean of values before and after changepoint
                 mean_difference = calc_weighted_mean_difference(number_values_below_list, 0, changepoints[0][0], None)
@@ -245,10 +219,10 @@ for i in range(0,image_width-window_width,window_width):
             
             # last changepoint until end of timeseries
             mean_difference = calc_weighted_mean_difference(number_values_below_list, changepoints[-2][0], changepoints[-1][0], None)
-            #print(mean_difference)
             if(mean_difference >= mean_threshold):
                 score = mean_difference #changepoints[-1][1] * 
                 events.append([score, i,j, timestamps[changepoints[-1][0]]])
+        
         overall_changepoints += len(changepoints)
 
 print(overall_changepoints)
