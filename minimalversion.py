@@ -4,6 +4,7 @@ import py4dgeo
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import matplotlib.dates as mdates
 from datetime import datetime, timedelta
 from sklearn.cluster import KMeans
@@ -103,12 +104,13 @@ def plot_time_series(timestamps, time_series):
 
     plt.show()
 
-def plot_image(region, cp_sel_idxs):
+def plot_image_results(region_start, region_width, region_height, timestamp_index):
     fig, ax = plt.subplots(1,1, figsize=(5,5))
     # get the change magnitude of the last epoch
-    change_vals = analysis.smoothed_distances[cp_sel_idxs, -1] # get last epoch
+    change_vals = analysis.smoothed_distances[:, timestamp_index]
+    cloud = analysis.corepoints.cloud
     # plot coordinates colored by change values 
-    d = ax.scatter(region[:,0], region[:,1], c = change_vals, cmap='seismic_r', vmin=-1.0, vmax=1.0, s=1)
+    d = ax.scatter(cloud[:,0], cloud[:,1], c = change_vals, cmap='seismic_r', vmin=-1.0, vmax=1.0, s=1)
     ax.set_aspect('equal')
     plt.colorbar(d, format=('%.2f'), label='Change value [m]', ax=ax)
 
@@ -116,7 +118,16 @@ def plot_image(region, cp_sel_idxs):
     ax.set_xlabel('X [m]')
     ax.set_ylabel('Y [m]')
 
+    shape = Rectangle(region_start,
+                   width=region_width,
+                   height=region_height,
+                   angle=0, fill=False,
+                   edgecolor="green")
+    ax.add_patch(shape)
+
     #print(cloud[:,0]) # gibt erste Spalte zurück!!--------------------
+
+
     plt.show()
 
 
@@ -292,6 +303,15 @@ events = np.array(events)
 sorted_events = events[events[:,0].argsort()]
 print(sorted_events[:,])
 print(len(sorted_events))
+
+x = range(image_width)
+y = range(image_height,0,-1)
+X, Y = np.meshgrid(x, y)
+z=np.zeros(image_width*image_height)
+cloud=np.column_stack((X.flatten(),Y.flatten(),z.flatten()))
+
+for event in sorted_events:
+    plot_image_results((event[1],event[2]), window_width, window_height, timestamps.index(event[3]))
 
 
 
