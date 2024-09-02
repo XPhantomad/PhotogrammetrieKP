@@ -1,10 +1,11 @@
 # Komplexpraktikum Photogrammetrie
 
-Aufgabe: Prozesserkennung in mehrdimensionalen Daten aus Erosionsmessungen (z.B. Boden/Steilhänge) mittels KI-basiertem Clustering (o.ä.)
+## Aufgabe
+Prozesserkennung in mehrdimensionalen Daten aus Erosionsmessungen (z.B. Boden/Steilhänge) mittels KI-basiertem Clustering (o.ä.)
 
 
 ## Ausgangspunkt
-- vorverarbeitete Punktwolken (909 Stück; registriert, orientiert, distanzen berechnet)
+- vorverarbeitete Punktwolken (909 Stück; registriert, orientiert, Distanzen berechnet)
 - Photogrammetrisch aufgenommen
 - Riverbank des Pulmanki River
 
@@ -15,7 +16,7 @@ Aufgabe: Prozesserkennung in mehrdimensionalen Daten aus Erosionsmessungen (z.B.
 ## Ansatz
 - nutzen der [py4dgeo Bibliothek](https://github.com/3dgeo-heidelberg/py4dgeo/tree/main) für Ablage der Daten in Analyseobjekt
 
-### Vereinfachungen
+### Angewendete Vereinfachungen
 - nur Abtrag registrieren
 - nur Startzeitpunkt des Ereignisses registrieren, keine Länge oder Geschwindigkeit
 - unteren Bereich bis y-Wert 150 nicht berücksichtigen
@@ -75,15 +76,15 @@ def calc_weighted_mean_difference(number_values_below_list, start, changepoint, 
 ### B1: Gesamte Zeitreihe; Patchgröße 30x30 Pixel
 ![Spatial_Result](Spatial_Result_30pixel.png)
 
-    Räumliche Ausgabe
+Räumliche Ausgabe
 
 ![Temporal_Result](Temporal_Result_30pixel.png)
-    Zeitliche Ausgabe
+Zeitliche Ausgabe
 
 ### B1: Gesamte Zeitreihe; Patchgröße 15x15 Pixel
 ![Spatial_Result](Spatial_Result_15pixel.png)
 
-    Räumliche Ausgabe
+Räumliche Ausgabe
 
 ![Temporal_Result](Temporal_Result_15pixel2.png)
-    Zeitliche Ausgabe
+Zeitliche Ausgabe
