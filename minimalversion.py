@@ -62,8 +62,11 @@ for f in pc_list:
     timestamps.append(timestamp)
 
 # create the spatiotemporal analysis object
-analysis = py4dgeo.SpatiotemporalAnalysis(f'{data_path}/riverbank.zip')
-#analysis = build_analysis()
+create_analysis = input("Create a new analysis [y/n]:")
+if(create_analysis == "n"):
+    analysis = py4dgeo.SpatiotemporalAnalysis(f'{data_path}/riverbank.zip')
+else:
+    analysis = build_analysis()
 
 # load the smoothed distances
 distances = analysis.smoothed_distances
@@ -156,7 +159,7 @@ mean_threshold = 0.1             # difference threshold of the means before and 
 # Request User Input
 timespan_start = int(input("Enter timespan start (Index):"))
 timespan_end = int(input("Enter timespan end (Index):"))
-if(timespan_start < 0 or timespan_start > 909 or timespan_end <0 or timespan_end>909 or timespan_end<timespan_start):
+if(timespan_start < 0 or timespan_start > 908 or timespan_end <0 or timespan_end>908 or timespan_end<timespan_start):
     print("invalid timespan")
     quit()
 window_width = int(input("Enter window size:"))
