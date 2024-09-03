@@ -65,7 +65,7 @@ def calc_weighted_mean_difference(number_values_below_list, start, changepoint, 
     2. Start- und End-Frame der Zeitreihe (max. 908)
     3. Größe des quadratischen Patches (Kantenlänge in Pixel), welches über das Bild geschoben wird
 
-    ![Console_Input_Request](console_input.jpg)
+    ![Console_Input_Request](Images_doku/console_input.jpg)
 - Ausgabe
     1. Bild mit Übersicht der räumlichen Änderungen (Score bestimmt Farbintensität)
     2. Diagramm mit Übersicht der zeitlichen Änderungen (Score bestimmt Höhe des Balkens)
@@ -75,20 +75,20 @@ def calc_weighted_mean_difference(number_values_below_list, start, changepoint, 
 - Bemerkung: Pixel bis y-Wert 150 wurde nicht berücksichtigt, da zu starkes Rauschen in diesem Bereich
 
 ### B1: Gesamte Zeitreihe; Patchgröße 30x30 Pixel
-![Spatial_Result](Spatial_Result_30pixel.png)
+![Spatial_Result](Images_doku/Spatial_Result_30pixel.png)
 
 Räumliche Ausgabe
 
-![Temporal_Result](Temporal_Result_30pixel.png)
+![Temporal_Result](Images_doku/Temporal_Result_30pixel.png)
 
 Zeitliche Ausgabe
 
 ### B1: Gesamte Zeitreihe; Patchgröße 15x15 Pixel
-![Spatial_Result](Spatial_Result_15pixel.png)
+![Spatial_Result](Images_doku/Spatial_Result_15pixel.png)
 
 Räumliche Ausgabe
 
-![Temporal_Result](Temporal_Result_15pixel2.png)
+![Temporal_Result](Images_doku/Temporal_Result_15pixel2.png)
 
 Zeitliche Ausgabe
 
