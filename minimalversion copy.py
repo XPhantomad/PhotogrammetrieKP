@@ -178,7 +178,7 @@ for i in range(0,image_width-window_width,window_width):
                     number_values_below+=1
             number_values_below_list.append(number_values_below/len(image))
 
-            # initialy set old value
+            #initialy set old value
             if(number_values_below_old == -1):
                 number_values_below_old = number_values_below
            
@@ -189,40 +189,54 @@ for i in range(0,image_width-window_width,window_width):
                 changepoints.append(imageindex)
                 up = True            
 
-            # register change point (DOWN)
-            # --> filter out to short events 
-            # ohne 564 changepoint Events
-            # if((number_values_below_old-number_values_below)/len(image)>=occurence_threshold/2 and up==True):
+            # # register change point (DOWN)
+            # # --> filter out to short events 
+            # # ohne 564 changepoint Events
+            # # if((number_values_below_old-number_values_below)/len(image)>=occurence_threshold/2 and up==True):
+            # #     if(imageindex - changepoints[-1] <= event_length_threshold):
+            # #         changepoints.pop()
+            # #     up = False
+
+            # # filtern, wenn Anzahl wieder unter 0,1 geht
+            # if((number_values_below/len(image))<=occurence_threshold/2 and up==True):
             #     if(imageindex - changepoints[-1] <= event_length_threshold):
             #         changepoints.pop()
             #     up = False
 
-            # filtern, wenn Anzahl wieder unter 0,1 geht
-            if((number_values_below/len(image))<=occurence_threshold/2 and up==True):
-                if(imageindex - changepoints[-1] <= event_length_threshold):
-                    changepoints.pop()
-                up = False
-
             number_values_below_old = number_values_below
 
-            # was danach???? 
+            # # was danach???? 
 
-            
         if(changepoints):
+            dary = number_values_below_list
+            dary -= np.average(dary)
+            step = np.hstack((np.ones(len(dary)), -1*np.ones(len(dary))))
+            dary_step = np.convolve(dary, step, mode='valid')
 
-            # Klassifizierung 
-            print(len(changepoints))      ## wenig changepoints im verhältnis zur Zeit: --> gutes Event
-            overall_changepoints += len(changepoints)
-            # Ausgabe Bereich und Zeitpunkt des ersten
-            print(timestamps[changepoints[0]])      ## mehrer hintereinander mit gleichem Datum des ersten changepoint
+            # get the peak of the convolution, its index
+            step_indx = np.argmax(dary_step)  # yes, cleaner than np.where(dary_step == dary_step.max())[0][0]
+
+            # plots
+            plt.plot(dary)
+            plt.plot(dary_step/10)
+            plt.plot((step_indx, step_indx), (dary_step[step_indx]/10, 0), 'r')   
+            plt.show()
 
 
-            ## TODO: Punktesystem für Events
+        # if(changepoints):
+        #     # Klassifizierung 
+        #     print(len(changepoints))      ## wenig changepoints im verhältnis zur Zeit: --> gutes Event
+        #     overall_changepoints += len(changepoints)
+        #     # Ausgabe Bereich und Zeitpunkt des ersten
+        #     print(timestamps[changepoints[0]])      ## mehrer hintereinander mit gleichem Datum des ersten changepoint
 
-            print(i,j)
-            # TODO: Tabbellarische Ausgabe
-            if(len(changepoints) == 1):
-                plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
+
+        #     ## TODO: Punktesystem für Events
+
+        #     print(i,j)
+        #     # TODO: Tabbellarische Ausgabe
+        #     if(len(changepoints) == 1):
+        #         plot_time_series(timestamps[timespan_start:timespan_end], number_values_below_list)
 
 print(overall_changepoints)
 

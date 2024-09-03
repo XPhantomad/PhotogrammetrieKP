@@ -15,6 +15,11 @@ import statistics
 image_width = 370
 image_height = 459
 
+# Changepoint detection parameter
+height_threshhold = -0.04
+occurence_threshold = 0.2          # Prozent der Pixel unter dem Schwellwert, damit Event erkannt wird
+mean_threshold = 0.1             # difference threshold of the means before and after the changepoints
+
 def build_analysis():
     analysis = py4dgeo.SpatiotemporalAnalysis(f'{data_path}/riverbank.zip', force=True)
 
@@ -150,11 +155,6 @@ def calc_weighted_mean_difference(number_values_below_list, start, changepoint, 
 
 overall_changepoints = 0
 events = []
-
-# Changepoint detection parameter
-height_threshhold = -0.04
-occurence_threshold = 0.2          # Prozent der Pixel unter dem Schwellwert, damit Event erkannt wird
-mean_threshold = 0.1             # difference threshold of the means before and after the changepoints
 
 # Request User Input
 timespan_start = int(input("Enter timespan start (Index):"))

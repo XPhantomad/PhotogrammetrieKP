@@ -69,6 +69,7 @@ def calc_weighted_mean_difference(number_values_below_list, start, changepoint, 
 - Ausgabe
     1. Bild mit Übersicht der räumlichen Änderungen (Score bestimmt Farbintensität)
     2. Diagramm mit Übersicht der zeitlichen Änderungen (Score bestimmt Höhe des Balkens)
+    3. Liste mit Changepoints sortiert nach Score
 
 ## Beispiele
 - Bemerkung: Pixel bis y-Wert 150 wurde nicht berücksichtigt, da zu starkes Rauschen in diesem Bereich
@@ -79,6 +80,7 @@ def calc_weighted_mean_difference(number_values_below_list, start, changepoint, 
 Räumliche Ausgabe
 
 ![Temporal_Result](Temporal_Result_30pixel.png)
+
 Zeitliche Ausgabe
 
 ### B1: Gesamte Zeitreihe; Patchgröße 15x15 Pixel
@@ -87,4 +89,12 @@ Zeitliche Ausgabe
 Räumliche Ausgabe
 
 ![Temporal_Result](Temporal_Result_15pixel2.png)
+
 Zeitliche Ausgabe
+
+## Offene Aufgaben:
+-	Registrierung der Changepoints verbessern (aktuelle mit Vergleich zw. Zwei Zeitpunkten --> mehr mit einschließen
+-	Rauschen im unteren Bereich behandeln
+- bessere Evaluation der Ergebnisse
+- Ereignislänge bestimmen
+
