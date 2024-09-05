@@ -2,12 +2,9 @@
 import os
 import py4dgeo
 import numpy as np
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import matplotlib.dates as mdates
-from datetime import datetime, timedelta
-from sklearn.cluster import KMeans
 from scipy.spatial import KDTree
 import statistics
 

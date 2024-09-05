@@ -51,6 +51,14 @@ def calc_weighted_mean_difference(number_values_below_list, start, changepoint, 
 
 ## Installation
 
+### Requierements
+
+- Python 3.11.5
+- py4dgeo (https://github.com/3dgeo-heidelberg/py4dgeo/)
+
+```
+pip install -r requirements.txt
+```
 
 ## Benutzung
 
