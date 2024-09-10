@@ -9,13 +9,13 @@ Prozesserkennung in mehrdimensionalen Daten aus Erosionsmessungen (z.B. Boden/St
 - Photogrammetrisch aufgenommen
 - Riverbank des Pulmanki River
 
-Ausgangspunkt der Arbeit sind 909 Punktwolken, die photogrammetrisch aufgenommen wurden. Im vorraus wurden die Punktwolken bereits registriert und zueinander orientiert. Außerdem wurden die Distanzen zwischen den Punktwolken berechnet und diese gerastert in einem Array zur Verfügung gestellt. 
+Ausgangspunkt der Arbeit sind 909 Punktwolken, die photogrammetrisch aufgenommen wurden. Die Punktwolken wurden bereits registriert, zueinander orientiert und gerastert. Außerdem wurden die Distanzen zwischen den Punktwolken berechnet und in einem Array zur Verfügung gestellt. 
 
 ## Ziel 
 - 4D change detection
 - Zeitliche und räumliche Erkennung und Klassifizierung der Events (Rutschungsereignisse auf dem Steilufer)
 
-Ziel der Arbeit ist die Detektion und Klassifikation von Veränderungen an dem Steilufer. Da es sich um 4-dimensionale Daten handelt (x,y,z und Zeit) muss eine 4D Änderungsdetektion durchgeführt werden. Dabei müssen sowohl die räumliche als auch die zeitliche Ausdehnung der Events erkannt und klassifiziert werden.
+Ziel der Arbeit ist die Detektion und Klassifikation von Veränderungen an dem Steilufer. Da es sich um 4-dimensionale Daten handelt (x,y,z und Zeit) muss eine 4D-Änderungsdetektion durchgeführt werden. Dabei müssen sowohl die räumliche als auch die zeitliche Ausdehnung der Events erkannt und klassifiziert werden.
 
 ## Ansatz
 - nutzen der [py4dgeo Bibliothek](https://github.com/3dgeo-heidelberg/py4dgeo/tree/main) für Ablage der Daten in Analyseobjekt
@@ -23,7 +23,7 @@ Ziel der Arbeit ist die Detektion und Klassifikation von Veränderungen an dem S
 ### Angewendete Vereinfachungen
 - es wird nur Abtrag registriert 
 - es wird nur der Startzeitpunkt des Ereignisses registriert, nicht die Länge oder Geschwindigkeit
-- der untere Bereich bis y-Wert 150 wird nicht berücksichtigt, da der Algorithmus sehr anfällig für Rauschen ist
+- der untere Bereich bis y-Wert 150 wird nicht berücksichtigt
 - die Schwellwerte sind hardcodiert
 
 ### Ablauf des Algorithmus
@@ -41,10 +41,10 @@ Ziel der Arbeit ist die Detektion und Klassifikation von Veränderungen an dem S
         changepoints.append([imageindex, height])
     ```
 
-Im ersten Schritt des Algotihmus, werden die Änderungspunkte detektiert. Dazu wird ein quadratischer Patch (Fenster) über das Bild bewegt. Für jede Position wird die gesamte Zeitreihe des Patches untersucht. In jedem Patch aus der Zeitreihe werden die Pixel, die kleiner als der festgelegte Höhenschwellwert sind gezählt, durch die gesamten Pixel im Patch geteilt und in einem Array gespeichert (--> WErte zwischen 0 und 1).  Bei einer starken Änderung der Anzahl der Pixel, die kleiner als der Höhenschwellwert sind, wird ein Änderungspunkt angelegt und zusammen mit der Sprunghöhe (Differenz der Pixel Anzahlen aus zwei Patches) zu der Liste hinzugefügt. 
+Im ersten Schritt des Algorithmus, werden die Änderungspunkte detektiert. Dazu wird ein quadratischer Patch (Fenster) über das Bild bewegt. Für jede Position wird die gesamte Zeitreihe des Patches untersucht. In jedem einzelnen Patch aus der Zeitreihe werden die Pixel, die kleiner als der festgelegte Höhenschwellwert sind gezählt, durch die gesamten Pixel im Patch dividiert und dieser Wert in einem Array gespeichert (--> Werte zwischen 0 und 1).  Bei einer starken Änderung der Anzahl der Pixel, die kleiner als der Höhenschwellwert sind, wird ein Änderungspunkt angelegt und zusammen mit der Sprunghöhe (Differenz der Pixel Anzahlen aus zwei zeitlich aufeinanderfolgenden Patches) zu der Liste hinzugefügt. 
 
 #### 2. Changepoints filtern und bewerten
-- Score = Differenz des durchschnittlichen Abtrages vor und nach Changepoint (vom letztem Changepoint bis zum aktuellen und vom aktuellen bis zum nächsten)
+- Score = Differenz des durchschnittlichen Abtrages vor und nach dem Changepoint (vom letztem Changepoint bis zum aktuellen und vom aktuellen bis zum nächsten)
 - zu niedrige (kleiner als Mittelwertschwellwert) und negative Scores herausfiltern
 ```
 def calc_weighted_mean_difference(number_values_below_list, start, changepoint, end):
@@ -57,14 +57,14 @@ def calc_weighted_mean_difference(number_values_below_list, start, changepoint, 
 ```
 
 Im zweiten Schritt werden die Änderungspunkte aus der Liste mit einer Bewertung versehen und anhand dieser gefiltert. Als Score dient die Differenz der Durchschnitte der Pixelanzahlen kleiner als der Höhenschwellwert bis zum vorherigen und bis zum nachfolgenden Änderungspunkt. 
-Angenommen man hat 2 Änderungspunkte registriert. Einen bei Zeitpunkt 20 und einen bei Zeitpunkt 40 von 100. Für den ersten Änderungspunkt wird der Score folgendermaßen berechnet: 
+Angenommen man hat 2 Änderungspunkte registriert. Einen bei Zeitpunkt 20 und einen bei Zeitpunkt 40 von 100 Zeitpunkten. Für den ersten Änderungspunkt wird der Score folgendermaßen berechnet: 
 
 (Durchschnitt der Pixelanzahlen kleiner als der Höhenschwellwert von Zeitpunkt 0 bis 19) - (Durchschnitt der Pixelanzahlen kleiner als der Höhenschwellwert von Zeitpunkt 20 bis 39)
 
-Die "Pixelanzahlen kleiner als der Höhenschwellwert" werden aus der Liste entnommen, die bei der Registrierung angelegt wurde. 
-Der Score befindet sich im Bereich zwischen 0 und 1.
+Die "Pixelanzahlen kleiner als der Höhenschwellwert" werden aus der Liste entnommen, die bei der Registrierung angelegt wurde. Der Score befindet sich im Bereich zwischen 0 und 1.
 
-Nachdem die beiden Schritte für einen Patch abgeschlossen wurden, wird mit dem nächsten Patch auf gleiche Weise fortgsetzt.
+
+Nachdem die beiden Schritte für einen Patch abgeschlossen wurden, wird mit dem nächsten Patch auf gleiche Weise fortgesetzt.
 
 ## Programm
 
@@ -98,9 +98,9 @@ python .\minimalversion.py
     2. Diagramm mit Übersicht der zeitlichen Änderungen (Score bestimmt Höhe des Balkens)
     3. Liste mit Changepoints sortiert nach Score (in der Konsole)
 
-    Die Ausgabe der räumlichen Änderungen basiert auf der eingegebenen Patchgröße und zeigt die Patches, in denen starke Änderungen detektiert wurden grün eingefärbt. Die Intensität/Transparenz der grünen Färbung richtet sich nach dem Score der Änderungspunkte in dem jeweiligen Patch. Ein Intensives grün steth für einen hohen Score und ein tranparentes grün für einen niedrigen Score. Wurden in einem Patch mehrere Änderungspunkte erkannt, so werden die Scores der einzelnen Änderungspunkte aufsummiert. Somit ist erkennbar, in welchen Bereichen viele oder große Events aufgetreten sind.
+    Die Ausgabe der räumlichen Änderungen basiert auf der eingegebenen Patchgröße und zeigt die Patches, in denen starke Änderungen detektiert wurden grün eingefärbt. Die Intensität/Transparenz der grünen Färbung richtet sich nach dem Score der Änderungspunkte in dem jeweiligen Patch. Ein intensives grün steht für einen hohen Score und ein transparentes grün für einen niedrigen Score. Wurden in einem Patch mehrere Änderungspunkte erkannt, so werden die Scores der einzelnen Änderungspunkte aufsummiert. Somit ist erkennbar in welchen Bereichen viele oder große Events aufgetreten sind.
 
-    Ähnliches gilt für die zeitliche Ausgabe, wo dei Scores die Höhe des Balkens bestimmen. Wurden zu einem Zeitpunkt mehrere Änderungspunkte detektiert, werden auch hier die Scores aufsummiert. In der Ausgabe ist erkennbar, zu welchen Zeitpunkten viele oder große Events aufgetreten sind. 
+    Ähnliches gilt für die zeitliche Ausgabe, wobei die Scores die Höhe des Balkens bestimmen. Wurden zu einem Zeitpunkt mehrere Änderungspunkte detektiert, werden auch hier die Scores aufsummiert. In der Ausgabe ist erkennbar, zu welchen Zeitpunkten viele oder große Events aufgetreten sind. 
 
     Zusätzlich wird die zugrunde liegende Liste der Änderungspunkte mit den jeweiligen Scores, Positionen und Daten in der Konsole ausgegeben.
 ## Beispiele
@@ -126,21 +126,20 @@ Zeitliche Ausgabe
 
 ## Ergebnisanalyse und Bewertung der Qualität der Detektion
 
-Der Algorithmus detektiert die Änderungen im Bereich ab y=150 gut. Die im Video deutlich erkennbaren Events werden detektiert. Die Einstellung der Patchgröße hat einen Einfluss auf die Laufzeit und auf die Feingranularität der Ergebnisse. 
+Der Algorithmus detektiert die Änderungen im Bereich ab y=150 gut. Die im Video deutlich erkennbaren Events werden detektiert. Die Einstellung der Patchgröße hat einen Einfluss auf die Laufzeit (kleiner Patchgröße --> längere Laufzeit) und auf die Feingranularität der Ergebnisse. 
 
-Bei der Größe 30x30 Pixel, wurden keine falschen Events erkannt. 
+Bei der Größe 30x30 Pixel, wurden keine falschen Events erkannt. Bis zu einer Patchgröße von 15x15 Pixel werden die Events zuverlässig erkannt. 
 
-Bei kleineren Patchgrößen werden zwar auch schlechter erkennbare Events detektier. Allerdings werden auch Änderungen erkannt, obwohl es kein Event in diesem Bereich gab.
+Bei kleineren Patchgrößen werden auch schlechter im Video erkennbare Events detektiert. Allerdings wird zunehmend auch Rauschen als Event erkannt und die Ergebnisse dadurch schlechter. Hier müsste man den Zeitraum eingrenzen, um sich auf bestimmte Events zu fokussieren
 
 Bei größeren Patchgrößen, werden nicht mehr alle deutlich sichtbaren Events detektiert. 
 
-Bezüglich der zeitlichen Detektion der Events wurde festgestellt, dass die Events mit einem kleinen Versatz detektiert werden. Das liegt daran, dass die Events mit geringen Änderungen beginnen und der ALgorithmus nur die größte Änderungsamplitude registriert. 
+Bezüglich der zeitlichen Detektion der Events wurde festgestellt, dass die Events mit einem kleinen Versatz detektiert werden. Das liegt daran, dass die Events mit geringen Änderungen beginnen und der Algorithmus nur die größte Änderungsamplitude registriert. 
 
-Als Fazit lässt sich festhalten, dass der Algorithmus mit der Einstellung von 30x30 Pixel über den gesamten Zeitraum ein zufriedenstellendes Ergebnis liefert. 
-
+Als Fazit lässt sich festhalten, dass der Algorithmus mit der Einstellung zwischen 30X30 bis 15x15 Pixel Patchgröße über den gesamten Zeitraum zufriedenstellende Ergebnisse liefert. 
 
 ## Offene Aufgaben:
--	Registrierung der Changepoints verbessern (aktuelle mit Vergleich zw. Zwei Zeitpunkten --> mehr mit einschließen)
+-	Registrierung der Changepoints verbessern (aktuelle mit Vergleich zw. Zwei Zeitpunkten --> mehr miteinschließen)
 -	Rauschen im unteren Bereich behandeln
 - bessere Evaluation der Ergebnisse
 - Ereignislänge bestimmen
