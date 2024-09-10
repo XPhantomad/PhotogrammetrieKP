@@ -7,7 +7,7 @@ from matplotlib.patches import Rectangle
 import matplotlib.dates as mdates
 from scipy.spatial import KDTree
 import statistics
-
+from datetime import datetime
 
 image_width = 370
 image_height = 459
@@ -96,6 +96,8 @@ def plot_temporal_result(timestamps, time_series):
 
     plt.bar(timestamps, time_series, color ='maroon', 
         width = 0.2)
+    plt.xlabel('Date')
+    plt.ylabel('Sum of Event-Scores')
     plt.show()
 
 
@@ -240,7 +242,6 @@ if(events.any()):
     for event in events:
         # sum up scores for timestamps
         timeseries[timestamps.index(event[3])] = timeseries[timestamps.index(event[3])] + event[0]
-    plot_time_series(timestamps[timespan_start:timespan_end], timeseries)
     plot_temporal_result(timestamps[timespan_start:timespan_end],timeseries)
 
 
