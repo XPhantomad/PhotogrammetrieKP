@@ -57,7 +57,10 @@ def calc_weighted_mean_difference(number_values_below_list, start, changepoint, 
 ```
 
 Im zweiten Schritt werden die Änderungspunkte aus der Liste mit einer Bewertung versehen und anhand dieser gefiltert. Als Score dient die Differenz der Durchschnitte der Pixelanzahlen kleiner als der Höhenschwellwert bis zum vorherigen und bis zum nachfolgenden Änderungspunkt. 
-Angenommen man hat 2 Änderungspunkte registriert. Einen bei Zeitpunkt 20 und einen bei Zeitpunkt 40 von 100. Für den ersten Änderungspunkt wird der Score folgendermaßen berechnet: (Durchschnitt der Pixelanzahlen kleiner als der Höhenschwellwert von Zeitpunkt 0 bis 19) - (Durchschnitt der Pixelanzahlen kleiner als der Höhenschwellwert von Zeitpunkt 20 bis 39)
+Angenommen man hat 2 Änderungspunkte registriert. Einen bei Zeitpunkt 20 und einen bei Zeitpunkt 40 von 100. Für den ersten Änderungspunkt wird der Score folgendermaßen berechnet: 
+
+(Durchschnitt der Pixelanzahlen kleiner als der Höhenschwellwert von Zeitpunkt 0 bis 19) - (Durchschnitt der Pixelanzahlen kleiner als der Höhenschwellwert von Zeitpunkt 20 bis 39)
+
 Die "Pixelanzahlen kleiner als der Höhenschwellwert" werden aus der Liste entnommen, die bei der Registrierung angelegt wurde. 
 Der Score befindet sich im Bereich zwischen 0 und 1.
 
